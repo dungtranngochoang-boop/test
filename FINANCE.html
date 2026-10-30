@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self Finance - Quản Lý Tài Chính 3 Tầng Tuần Tự</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+    .bank-input {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      letter-spacing: 0.03em;
+      text-align: center;
+      text-transform: uppercase;
+      width: 78px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .bank-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #0f172a;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+    }
+    .bank-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    .bank-TECH { background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .bank-MOMO { background-color: #fce7f3; color: #db2777; border: 1px solid #fbcfe8; }
+    .bank-MB { background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+    .bank-TP { background-color: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+    .bank-SHB { background-color: #ffedd5; color: #ea580c; border: 1px solid #fed7aa; }
+    .bank-BIDV { background-color: #ccfbf1; color: #0d9488; border: 1px solid #99f6e4; }
+    .bank-VCB { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+    .bank-UOB { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+    .bank-VPB { background-color: #ecfccb; color: #4d7c0f; border: 1px solid #d9f99d; }
+    .bank-ACB { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .bank-LPB { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .bank-VIB { background-color: #fae8ff; color: #a21caf; border: 1px solid #f5d0fe; }
+    .bank-CUSTOM { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .tab-active { background-color: #0f172a; color: #ffffff; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+
+  <!-- Danh sách gợi ý tự điền Ngân hàng / Ví điện tử -->
+  <datalist id="bankSuggestions">
+    <option value="TECH">Techcombank</option>
+    <option value="MOMO">Ví MoMo</option>
+    <option value="MB">MBBank</option>
+    <option value="TP">TPBank</option>
+    <option value="SHB">SHB (Lãi 6T 7.7%)</option>
+    <option value="BIDV">BIDV (Lãi 6T 7.2%)</option>
+    <option value="UOB">UOB (Lãi 6T 7.1%)</option>
+    <option value="BACA">Bắc Á Bank (Lãi 6T 7.05%)</option>
+    <option value="LPB">LPBank (Lãi 6T 7.0%)</option>
+    <option value="VCB">Vietcombank</option>
+    <option value="VPB">VPBank</option>
+    <option value="ACB">ACB</option>
+    <option value="VIB">VIB</option>
+    <option value="OCB">OCB</option>
+    <option value="ZALO">ZaloPay</option>
+  </datalist>
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center font-bold text-lg shadow">SF</div>
+        <div>
+          <h1 class="font-bold text-base md:text-lg leading-tight">Hệ Thống Quản Trị Tài Chính Cá Nhân (Tháp 3 Tầng Tuần Tự)</h1>
+          <p class="text-xs text-slate-400">Ưu tiên hoàn tất Ngắn hạn $\rightarrow$ rồi tới Trung hạn $\rightarrow$ rồi mới sang Tích lũy dài hạn</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <button onclick="copyBanksToAllFutureMonths()" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg font-semibold transition" title="Áp dụng cấu hình Ngân hàng của tháng này cho tất cả các tháng phía sau">
+          ⇄ Đồng bộ NH sang các tháng sau
+        </button>
+        <button onclick="exportJSON()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-2 rounded-lg font-medium transition">
+          ⬇ Sao lưu (.JSON)
+        </button>
+        <label class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-2 rounded-lg font-medium cursor-pointer transition">
+          ⬆ Nhập file (.JSON)
+          <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)" />
+        </label>
+        <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg font-semibold transition">
+          📊 Xuất Excel (.CSV)
+        </button>
+        <button onclick="resetToDefault()" class="bg-rose-900/60 hover:bg-rose-800 border border-rose-700 px-3 py-2 rounded-lg text-rose-200 transition">
+          ↺ Khôi phục gốc PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- Tháp Mục Tiêu Tài Chính 3 Tầng Độc Lập (Tự nhập hạn mức từng quỹ) -->
+    <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4 border-b border-slate-100 pb-3">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700">Tháp Mục Tiêu Tài Chính 3 Tầng (Rót Tiền Tuần Tự 1 $\rightarrow$ 2 $\rightarrow$ 3)</h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Bạn tự nhập số tiền mục tiêu cho từng quỹ bên dưới. Quỹ số 1 đầy 100% mới bắt đầu rót sang Quỹ số 2; Quỹ số 2 đầy 100% mới bắt đầu rót sang Quỹ số 3.
+          </p>
+        </div>
+        <span class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+          Lãi tiết kiệm 6 tháng (3,5%/kỳ) tự động cộng dồn vào quỹ đang mở
+        </span>
+      </div>
+
+      <!-- 3 Thẻ Nhập Mục Tiêu & Theo Dõi Tiến Độ Tuần Tự -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="goalProgressCards"></div>
+    </section>
+
+    <!-- Thanh chọn Tháng (Tabs) -->
+    <section class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex items-center justify-between gap-2 overflow-x-auto">
+      <div class="flex items-center gap-1.5 overflow-x-auto py-1" id="monthTabs"></div>
+      <div class="flex items-center gap-1.5 shrink-0 pl-2 border-l border-slate-200">
+        <button onclick="addNewMonth()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition">
+          + Thêm tháng tiếp theo
+        </button>
+        <button onclick="deleteCurrentMonth()" class="text-xs text-rose-600 hover:bg-rose-50 px-2.5 py-2 rounded-xl transition" title="Xóa tháng hiện tại">
+          🗑
+        </button>
+      </div>
+    </section>
+
+    <!-- 4 Thẻ Chỉ Số Cốt Lõi Của Tháng Đang Chọn -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpiCards"></section>
+
+    <!-- Khu vực chính: Bảng 7 Hũ + Biểu đồ & Đồng bộ Ngân hàng -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Cột Trái: Tổng hợp 7 Hũ (7 cột) -->
+      <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="font-bold text-base text-slate-800" id="currentMonthTitle">Bảng Phân Bổ Các Hũ Trong Tháng</h3>
+            <p class="text-xs text-slate-500">Nhấp vào cột <strong>NH</strong> để tự gõ/chọn ngân hàng (tự động đồng bộ toàn bộ bảng bên dưới)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500">Lãi suất 6T:</span>
+            <input type="number" id="monthRateInput" step="0.1" onchange="updateMonthHeader()"
+              class="w-16 px-2 py-1 text-xs font-bold border border-slate-300 rounded text-right" />
+            <span class="text-xs font-semibold text-slate-600">%/6T</span>
+          </div>
+        </div>
+
+        <!-- Ô nhập Tổng thu nhập & Ghi chú tháng -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tổng thu nhập tháng này (A)</label>
+            <div class="relative">
+              <input type="text" inputmode="numeric" id="monthIncomeInput"
+                oninput="formatCurrencyInputLive(this)" onchange="updateMonthHeader()"
+                class="w-full px-3 py-2 pr-12 border border-slate-300 rounded-lg font-bold text-slate-900 bg-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <span class="absolute right-3 top-2.5 text-xs font-bold text-slate-400">VND</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Ghi chú tháng / Ngân hàng gửi 6T</label>
+            <input type="text" id="monthNoteInput" onchange="updateMonthHeader()" placeholder="VD: Gửi online SHB 7.7%/năm..."
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 bg-white focus:ring-2 focus:ring-emerald-500 outline-none" />
+          </div>
+        </div>
+
+        <!-- Bảng 7 Hũ -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs uppercase bg-slate-100 text-slate-600">
+              <tr>
+                <th class="py-2.5 px-3 rounded-l-lg">STT & Tên Hũ</th>
+                <th class="py-2.5 px-2 text-center" title="Nhấp để tự điền hoặc chọn Ngân hàng/Ví">NH ✎</th>
+                <th class="py-2.5 px-3 text-right">Phân bổ tháng</th>
+                <th class="py-2.5 px-2 text-right">% Thu nhập</th>
+                <th class="py-2.5 px-3 text-right rounded-r-lg">Trạng thái Quỹ / Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody id="jarsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cột Phải: Biểu đồ trực quan & Tổng hợp dòng tiền theo Ngân hàng (5 cột) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between space-y-4">
+        <div>
+          <h3 class="font-bold text-base text-slate-800 border-b border-slate-100 pb-3">So Sánh Phân Bổ (Đồng Bộ Theo NH)</h3>
+          <div class="h-56 mt-3">
+            <canvas id="jarBarChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Bảng Đồng Bộ Dòng Tiền Cần Chuyển Vào Từng Ngân Hàng Trong Tháng -->
+        <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-700">🏦 Tổng Hợp Dòng Tiền Theo Ngân Hàng / Ví</span>
+            <span class="text-[11px] text-slate-500">Tự động gom theo cột NH</span>
+          </div>
+          <div id="bankAllocationSummary" class="space-y-1.5 pt-1"></div>
+        </div>
+
+        <!-- Tóm tắt phân bổ vào 3 Quỹ trong tháng -->
+        <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 space-y-2" id="summaryThreePillars"></div>
+      </div>
+    </div>
+
+    <!-- Khu vực Chi Tiết Từng Hũ Chi Tiêu (Đồng bộ 2 chiều tên Ngân hàng với Bảng 7 Hũ) -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="detailedBucketsContainer"></section>
+
+    <!-- Bảng Theo Dõi Thang Tiền Gửi 6 Tháng (CD Laddering) & Lộ Trình 3 Quỹ Tuần Tự -->
+    <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-bold text-base text-slate-800">Bảng Tiến Độ Rót Tiền Tuần Tự: Ngắn Hạn $\rightarrow$ Trung Hạn $\rightarrow$ Tích Lũy Dài Hạn</h3>
+          <p class="text-xs text-slate-500">Toàn bộ tiền tiết kiệm mỗi tháng + lãi đáo hạn 6 tháng (3,5%) được ưu tiên lấp đầy từng quỹ theo đúng thứ tự 1 $\rightarrow$ 2 $\rightarrow$ 3.</p>
+        </div>
+        <span id="milestone300Badge" class="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800"></span>
+      </div>
+
+      <div class="overflow-x-auto max-h-96">
+        <table class="w-full text-xs md:text-sm text-left">
+          <thead class="text-xs uppercase bg-slate-100 text-slate-600 sticky top-0">
+            <tr>
+              <th class="py-2.5 px-3">Kỳ / Tháng</th>
+              <th class="py-2.5 px-2 text-center">NH Gửi 6T</th>
+              <th class="py-2.5 px-2 text-right">Thu nhập</th>
+              <th class="py-2.5 px-2 text-right">Chi tiêu</th>
+              <th class="py-2.5 px-2 text-right">Lãi 6T đáo hạn</th>
+              <th class="py-2.5 px-3 text-right text-amber-700">1. Lũy kế Ngắn Hạn</th>
+              <th class="py-2.5 px-3 text-right text-blue-700">2. Lũy kế Trung Hạn</th>
+              <th class="py-2.5 px-3 text-right text-emerald-700">3. Lũy kế Dài Hạn</th>
+              <th class="py-2.5 px-3 text-right font-bold text-slate-900">Tổng Tài Sản (1+2+3)</th>
+            </tr>
+          </thead>
+          <tbody id="ladderTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'SELF_FINANCE_ALBERT_V2';
+
+    function formatNumberDots(num) {
+      const n = Math.round(Number(num) || 0);
+      return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function parseFormattedNumber(str) {
+      if (typeof str === 'number') return str;
+      const cleaned = String(str || '').replace(/[^\d]/g, '');
+      return cleaned ? parseInt(cleaned, 10) : 0;
+    }
+
+    function formatCurrencyInputLive(inputEl) {
+      const rawDigits = inputEl.value.replace(/[^\d]/g, '');
+      if (!rawDigits) {
+        inputEl.value = '0';
+        return;
+      }
+      const numericVal = parseInt(rawDigits, 10);
+      inputEl.value = formatNumberDots(numericVal);
+    }
+
+    function formatVND(num) {
+      return formatNumberDots(num) + ' ₫';
+    }
+
+    function getDefaultBanks() {
+      return {
+        jar1: 'TECH',
+        jar2: 'MOMO',
+        jar3: 'TECH',
+        jar4: 'MB',
+        jar5: 'TP',
+        jar6: 'TECH',
+        jar7: 'TP',
+        unexpected: 'TECH'
+      };
+    }
+
+    function getBankStyleClass(bankName) {
+      const code = String(bankName || '').trim().toUpperCase();
+      const known = ['TECH', 'MOMO', 'MB', 'TP', 'SHB', 'BIDV', 'VCB', 'UOB', 'VPB', 'ACB', 'LPB', 'VIB'];
+      if (known.includes(code)) return `bank-${code}`;
+      if (code.includes('TECH') || code.includes('TCB')) return 'bank-TECH';
+      if (code.includes('MOMO')) return 'bank-MOMO';
+      if (code.includes('MB')) return 'bank-MB';
+      if (code.includes('TP')) return 'bank-TP';
+      if (code.includes('SHB')) return 'bank-SHB';
+      if (code.includes('BIDV')) return 'bank-BIDV';
+      if (code.includes('VCB') || code.includes('VIETCOM')) return 'bank-VCB';
+      if (code.includes('UOB')) return 'bank-UOB';
+      if (code.includes('VP')) return 'bank-VPB';
+      if (code.includes('ACB')) return 'bank-ACB';
+      if (code.includes('LP')) return 'bank-LPB';
+      if (code.includes('VIB') || code.includes('ZALO')) return 'bank-VIB';
+      return 'bank-CUSTOM';
+    }
+
+    function getDefaultData() {
+      const baseMandatory = [
+        { name: 'Nước', amount: 170000 },
+        { name: 'Internet', amount: 220000 },
+        { name: 'Phát sinh dự trù', amount: 500000 },
+        { name: 'Mẹ hàng tuần', amount: 1000000 },
+        { name: 'YouTube Premium, Gemini Pro', amount: 201000 }
+      ];
+      const baseNoWeeklyMom = [
+        { name: 'Nước', amount: 170000 },
+        { name: 'Internet', amount: 220000 },
+        { name: 'Phát sinh dự trù', amount: 500000 },
+        { name: 'Mẹ hàng tuần', amount: 0 },
+        { name: 'YouTube Premium, Gemini Pro', amount: 201000 }
+      ];
+      const baseFood = [
+        { name: 'Ăn sáng, cf sáng, trưa, tối (Chia đôi 1tr/tuần)', amount: 3000000 }
+      ];
+      const baseLiving = [
+        { name: 'Cắt tóc', amount: 150000 },
+        { name: 'Gym', amount: 550000 },
+        { name: 'Điện thoại', amount: 140000 },
+        { name: 'Giặt đồ & Xà bông, giấy VS', amount: 240000 }
+      ];
+      const baseInvest = [
+        { name: 'Học tiếng Đức (Ghi chú: 5.500.000 ₫)', amount: 0 },
+        { name: 'Học Rhino (Ghi chú: 3.000.000 ₫)', amount: 0 }
+      ];
+
+      const clone = (arr) => JSON.parse(JSON.stringify(arr));
+
+      const rawMonths = [
+        {
+          id: '2026-11', label: 'T11/2026 (Tr.1)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Tất toán nợ Shopee, Momo, TPBank',
+          mandatory: [
+            { name: 'Nợ tất toán (Shopee 1tr1, Momo 245k, TPB 1tr860)', amount: 12060000 },
+            { name: 'Nước', amount: 170000 },
+            { name: 'Internet', amount: 220000 },
+            { name: 'Phát sinh dự trù', amount: 500000 },
+            { name: 'Nợ Sang', amount: 180000 },
+            { name: 'Mẹ đi du lịch', amount: 1500000 },
+            { name: 'YouTube Premium, Gemini Pro', amount: 201000 }
+          ],
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: [
+            { name: 'IELTS (Ghi chú tín dụng: 4.664.000 ₫)', amount: 0 },
+            { name: 'REVIT ACP (Tháng 12 thi)', amount: 0 }
+          ],
+          unexpected: []
+        },
+        {
+          id: '2026-12', label: 'T12/2026 (Tr.2)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Hết nợ tiêu dùng, còn khoản Mẹ đi du lịch',
+          mandatory: [
+            { name: 'Nước', amount: 170000 },
+            { name: 'Internet', amount: 220000 },
+            { name: 'Phát sinh dự trù', amount: 500000 },
+            { name: 'Mẹ đi du lịch', amount: 1500000 },
+            { name: 'YouTube Premium, Gemini Pro', amount: 201000 }
+          ],
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: [{ name: 'IELTS / REVIT ACP (Tín dụng)', amount: 0 }],
+          unexpected: []
+        },
+        {
+          id: '2027-01', label: 'T01/2027 (Tr.3)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Sắm Tết 2.000.000 ₫',
+          mandatory: clone(baseNoWeeklyMom),
+          food: clone(baseFood),
+          living: [
+            { name: 'Cắt tóc', amount: 150000 },
+            { name: 'Gym', amount: 550000 },
+            { name: 'Sắm Tết', amount: 2000000 },
+            { name: 'Điện thoại', amount: 140000 },
+            { name: 'Giặt đồ', amount: 240000 }
+          ],
+          invest: [{ name: 'IELTS (Ghi chú tín dụng: 4.664.000 ₫)', amount: 0 }],
+          unexpected: []
+        },
+        {
+          id: '2027-02', label: 'T02/2027 (Tr.4)', income: 35050000, rate6M: 3.5, entertainment: 500000,
+          note: 'Có lương Tháng 13 • Chúc Tết 3.000.000 ₫',
+          mandatory: clone(baseNoWeeklyMom),
+          food: clone(baseFood),
+          living: [
+            { name: 'Chúc Tết (Mẹ 500k, Chín 500k, Nhà Sang 1tr, 2 nhỏ 200k, dư 800k)', amount: 3000000 },
+            { name: 'Cắt tóc', amount: 150000 },
+            { name: 'Gym', amount: 550000 },
+            { name: 'Điện thoại', amount: 140000 },
+            { name: 'Giặt đồ', amount: 240000 }
+          ],
+          invest: [{ name: 'Học tiếng Đức', amount: 0 }],
+          unexpected: []
+        },
+        {
+          id: '2027-03', label: 'T03/2027 (Tr.5)', income: 35050000, rate6M: 3.5, entertainment: 500000,
+          note: 'Thưởng/Lương T13 • Lấp đầy xong Ngắn & Trung hạn, bắt đầu sang Dài hạn',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-04', label: 'T04/2027 (Tr.6)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Ổn định dòng tiền • Tập trung 100% vào Tích lũy dài hạn',
+          mandatory: clone(baseNoWeeklyMom),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-05', label: 'T05/2027 (Tr.7)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Nhận lãi sổ 6T đầu tiên (của T11/2026)',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-06', label: 'T06/2027 (Tr.8)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Đáo hạn sổ T12/2026 • Tái tục gốc + lãi + tiết kiệm mới',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-07', label: 'T07/2027 (Tr.9)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Đáo hạn sổ T01/2027 • Lãi kép bậc thang 6 tháng',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-08', label: 'T08/2027 (Tr.10)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Đáo hạn sổ T02/2027 (Sổ lớn từ lương T13)',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-09', label: 'T09/2027 (Tr.11)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Đáo hạn sổ T03/2027 • Tăng tốc tích lũy dài hạn',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-10', label: 'T10/2027 (Tr.12)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Đáo hạn sổ T04/2027 • Tích lũy dài hạn bứt phá',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        },
+        {
+          id: '2027-11', label: 'T11/2027 (Tr.13)', income: 24700000, rate6M: 3.5, entertainment: 500000,
+          note: 'Đáo hạn vòng 2 sổ T05/2027',
+          mandatory: clone(baseMandatory),
+          food: clone(baseFood),
+          living: clone(baseLiving),
+          invest: clone(baseInvest),
+          unexpected: []
+        }
+      ];
+
+      rawMonths.forEach(m => { m.banks = getDefaultBanks(); });
+
+      return {
+        config: {
+          shortTermCap: 12000000,  // Người dùng tự nhập hạn mức Quỹ Dự Phòng Ngắn Hạn (1-2 tháng)
+          midTermCap: 38000000,    // Người dùng tự nhập hạn mức Quỹ Dự Phòng Trung Hạn (3-6 tháng)
+          longTermGoal: 300000000  // Người dùng tự nhập hạn mức Quỹ Tích Lũy Dài Hạn
+        },
+        currentMonthIndex: 0,
+        months: rawMonths
+      };
+    }
+
+    let appData = loadData();
+    let barChartInstance = null;
+
+    function ensureStructure(data) {
+      if (!data || !Array.isArray(data.months)) return getDefaultData();
+      if (!data.config) data.config = {};
+      if (typeof data.config.shortTermCap === 'undefined') data.config.shortTermCap = 12000000;
+      if (typeof data.config.midTermCap === 'undefined') data.config.midTermCap = 38000000;
+      if (typeof data.config.longTermGoal === 'undefined') data.config.longTermGoal = 300000000;
+
+      data.months.forEach(m => {
+        if (!m.banks) {
+          m.banks = getDefaultBanks();
+        } else {
+          const def = getDefaultBanks();
+          Object.keys(def).forEach(k => {
+            if (!m.banks[k]) m.banks[k] = def[k];
+          });
+        }
+      });
+      return data;
+    }
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          return ensureStructure(JSON.parse(raw));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return getDefaultData();
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    function sumItems(items) {
+      return (items || []).reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+    }
+
+    // THUẬT TOÁN RÓT TIỀN TUẦN TỰ TUYỆT ĐỐI 3 TẦNG:
+    // 1. Quỹ Dự Phòng Ngắn Hạn (0 -> shortTermCap)
+    // 2. Xong Ngắn hạn mới rót vào Quỹ Dự Phòng Trung Hạn (0 -> midTermCap)
+    // 3. Xong Trung hạn mới rót vào Quỹ Tích Lũy Dài Hạn (0 -> longTermGoal)
+    function computeTimeline() {
+      const results = [];
+      let cumShort = 0;
+      let cumMid = 0;
+      let cumLong = 0;
+
+      const shortCap = Math.max(0, Number(appData.config.shortTermCap) || 0);
+      const midCap = Math.max(0, Number(appData.config.midTermCap) || 0);
+      const longGoal = Math.max(0, Number(appData.config.longTermGoal) || 300000000);
+
+      const totalMonths = appData.months.length;
+
+      for (let i = 0; i < totalMonths; i++) {
+        const m = appData.months[i];
+        const banks = m.banks || getDefaultBanks();
+        const income = Number(m.income) || 0;
+
+        const jar2 = sumItems(m.mandatory);
+        const jar3 = sumItems(m.food);
+        const jar4 = sumItems(m.living);
+        const jar5 = sumItems(m.invest);
+        const jar6 = Number(m.entertainment) || 0;
+        const unexpected = sumItems(m.unexpected);
+
+        const totalExpenses = jar2 + jar3 + jar4 + jar5 + jar6 + unexpected;
+        // Toàn bộ tiền dư ra từ thu nhập tháng này sau khi trừ các chi phí
+        const monthlySurplusFromIncome = Math.max(0, income - totalExpenses);
+
+        // Lãi đáo hạn 6 tháng từ tổng số tiền gửi mới của tháng i - 6 (vì cả Quỹ Dự Phòng & Tích lũy đều gửi 6 tháng lãi 3.5%)
+        let maturedInterest = 0;
+        let maturedFromBank = null;
+        let maturedFromLabel = null;
+        if (i >= 6) {
+          const prev6 = results[i - 6];
+          const rate = (Number(prev6.rate6M) || 3.5) / 100;
+          maturedInterest = Math.round(prev6.totalMonthDepositAllFunds * rate);
+          if (maturedInterest > 0) {
+            maturedFromBank = prev6.banks.jar7;
+            maturedFromLabel = prev6.label.split(' ')[0];
+          }
+        }
+
+        // Tổng nguồn tiền khả dụng trong tháng để rót vào 3 Quỹ theo thứ tự ưu tiên tuyệt đối
+        let availablePool = monthlySurplusFromIncome + maturedInterest;
+
+        // BƯỚC 1: Ưu tiên lấp đầy Quỹ Dự Phòng Ngắn Hạn trước tiên
+        const roomShort = Math.max(0, shortCap - cumShort);
+        const addedToShort = Math.min(availablePool, roomShort);
+        cumShort += addedToShort;
+        availablePool -= addedToShort;
+
+        // BƯỚC 2: Chỉ khi Quỹ Ngắn Hạn đã đầy 100%, phần tiền còn lại mới rót vào Quỹ Dự Phòng Trung Hạn
+        const roomMid = Math.max(0, midCap - cumMid);
+        const addedToMid = Math.min(availablePool, roomMid);
+        cumMid += addedToMid;
+        availablePool -= addedToMid;
+
+        // BƯỚC 3: Chỉ khi cả Quỹ Ngắn Hạn và Quỹ Trung Hạn đã đầy 100%, phần tiền còn lại mới chảy vào Quỹ Tích Lũy Dài Hạn
+        const addedToLong = availablePool;
+        cumLong += addedToLong;
+
+        // Để hiển thị trên Bảng 7 Hũ quen thuộc của bạn:
+        // - Hũ 1 đại diện cho khoản nạp vào Quỹ Dự Phòng Ngắn Hạn
+        // - Hũ 7 đại diện cho khoản nạp vào Quỹ Trung Hạn + Quỹ Tích Lũy Dài Hạn (chỉ có tiền khi Hũ 1 đã xong)
+        const jar1Effective = addedToShort;
+        const jar7Effective = addedToMid + addedToLong;
+        const totalMonthDepositAllFunds = addedToShort + addedToMid + addedToLong;
+
+        results.push({
+          index: i,
+          id: m.id,
+          label: m.label,
+          income,
+          rate6M: m.rate6M,
+          note: m.note,
+          banks: JSON.parse(JSON.stringify(banks)),
+          jar2,
+          jar3,
+          jar4,
+          jar5,
+          jar6,
+          unexpected,
+          essentialLivingCost: jar2 + jar3 + jar4,
+          totalOutflow: totalExpenses,
+          monthlySurplusFromIncome,
+          maturedInterest,
+          maturedFromBank,
+          maturedFromLabel,
+          addedToShort,
+          addedToMid,
+          addedToLong,
+          cumShort,
+          cumMid,
+          cumLong,
+          isShortFull: cumShort >= shortCap,
+          isMidFull: cumMid >= midCap,
+          jar1Effective,
+          jar7Effective,
+          totalMonthDepositAllFunds,
+          totalWealth: cumShort + cumMid + cumLong
+        });
+      }
+      return results;
+    }
+
+    function renderAll() {
+      saveData();
+      const timeline = computeTimeline();
+      const idx = Math.min(appData.currentMonthIndex, appData.months.length - 1);
+      appData.currentMonthIndex = idx;
+      const curMonth = appData.months[idx];
+      const curCalc = timeline[idx];
+
+      renderGoalProgress(curCalc);
+      renderMonthTabs(idx);
+      renderKPICards(curCalc);
+      renderJarsTable(curMonth, curCalc);
+      renderBankAllocationSummary(curCalc);
+      renderBarChart(curCalc);
+      renderDetailedBuckets(curMonth, curCalc);
+      renderLadderTable(timeline);
+    }
+
+    // Hiển thị 3 thẻ tiến độ độc lập, có ô nhập trực tiếp số tiền mục tiêu cho từng quỹ (có dấu chấm)
+    function renderGoalProgress(curCalc) {
+      const shortTarget = Math.max(0, Number(appData.config.shortTermCap) || 0);
+      const midTarget = Math.max(0, Number(appData.config.midTermCap) || 0);
+      const longTarget = Math.max(0, Number(appData.config.longTermGoal) || 300000000);
+
+      const shortPct = shortTarget > 0 ? Math.min(100, Math.round((curCalc.cumShort / shortTarget) * 100)) : 100;
+      const midPct = midTarget > 0 ? Math.min(100, Math.round((curCalc.cumMid / midTarget) * 100)) : 100;
+      const longPct = longTarget > 0 ? Math.min(100, Math.round((curCalc.cumLong / longTarget) * 100)) : 0;
+
+      // Xác định quỹ nào đang được ưu tiên rót tiền ở tháng hiện tại
+      let badge1 = '', badge2 = '', badge3 = '';
+      if (shortPct < 100) {
+        badge1 = `<span class="text-amber-700 bg-amber-100 px-2 py-0.5 rounded font-bold">🔥 ƯU TIÊN SỐ 1 (${shortPct}%)</span>`;
+        badge2 = `<span class="text-slate-400 font-medium">⏳ Đợi Ngắn hạn xong (0%)</span>`;
+        badge3 = `<span class="text-slate-400 font-medium">⏳ Đợi Trung hạn xong (0%)</span>`;
+      } else if (midPct < 100) {
+        badge1 = `<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">✓ ĐÃ XONG 100%</span>`;
+        badge2 = `<span class="text-blue-700 bg-blue-100 px-2 py-0.5 rounded font-bold">🔥 ƯU TIÊN SỐ 2 (${midPct}%)</span>`;
+        badge3 = `<span class="text-slate-400 font-medium">⏳ Đợi Trung hạn xong (0%)</span>`;
+      } else {
+        badge1 = `<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">✓ ĐÃ XONG 100%</span>`;
+        badge2 = `<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">✓ ĐÃ XONG 100%</span>`;
+        badge3 = longPct >= 100
+          ? `<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">🏆 HOÀN THÀNH 100%</span>`
+          : `<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded font-bold">🔥 ƯU TIÊN SỐ 3 (${longPct}%)</span>`;
+      }
+
+      document.getElementById('goalProgressCards').innerHTML = `
+        <!-- Tầng 1: Quỹ Dự Phòng Ngắn Hạn -->
+        <div class="p-4 rounded-xl ${shortPct < 100 ? 'bg-amber-50/70 border-2 border-amber-400 shadow-sm' : 'bg-slate-50 border border-slate-200'} space-y-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800">1. Quỹ Dự Phòng Ngắn Hạn (1–2T) [${curCalc.banks.jar1}]</span>
+            ${badge1}
+          </div>
+          <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+            <div class="${shortPct < 100 ? 'bg-amber-500' : 'bg-emerald-500'} h-full transition-all" style="width:${shortPct}%"></div>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-600">Đã có: <strong class="text-slate-900">${formatVND(curCalc.cumShort)}</strong></span>
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] text-slate-500">Mục tiêu:</span>
+              <input type="text" inputmode="numeric" value="${formatNumberDots(shortTarget)}"
+                oninput="formatCurrencyInputLive(this)" onchange="updateGoalCap('shortTermCap', this.value)"
+                class="w-28 px-2 py-1 text-right font-bold border border-slate-300 rounded bg-white text-slate-900 focus:ring-2 focus:ring-amber-500 outline-none" />
+              <span class="text-[11px] text-slate-500">₫</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">Tháng này rót vào: <strong class="text-amber-700">+${formatVND(curCalc.addedToShort)}</strong></p>
+        </div>
+
+        <!-- Tầng 2: Quỹ Dự Phòng Trung Hạn -->
+        <div class="p-4 rounded-xl ${shortPct >= 100 && midPct < 100 ? 'bg-blue-50/70 border-2 border-blue-400 shadow-sm' : 'bg-slate-50 border border-slate-200'} space-y-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800">2. Quỹ Dự Phòng Trung Hạn (3–6T) [${curCalc.banks.jar7}]</span>
+            ${badge2}
+          </div>
+          <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+            <div class="bg-blue-600 h-full transition-all" style="width:${midPct}%"></div>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-600">Đã có: <strong class="text-slate-900">${formatVND(curCalc.cumMid)}</strong></span>
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] text-slate-500">Mục tiêu:</span>
+              <input type="text" inputmode="numeric" value="${formatNumberDots(midTarget)}"
+                oninput="formatCurrencyInputLive(this)" onchange="updateGoalCap('midTermCap', this.value)"
+                class="w-28 px-2 py-1 text-right font-bold border border-slate-300 rounded bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" />
+              <span class="text-[11px] text-slate-500">₫</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">Tháng này rót vào: <strong class="text-blue-700">+${formatVND(curCalc.addedToMid)}</strong></p>
+        </div>
+
+        <!-- Tầng 3: Quỹ Tích Lũy Dài Hạn -->
+        <div class="p-4 rounded-xl ${shortPct >= 100 && midPct >= 100 ? 'bg-emerald-50/80 border-2 border-emerald-500 shadow-sm' : 'bg-slate-50 border border-slate-200'} space-y-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800">3. Quỹ Tích Lũy Dài Hạn [${curCalc.banks.jar7}]</span>
+            ${badge3}
+          </div>
+          <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-600 h-full transition-all" style="width:${longPct}%"></div>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-600">Đã có: <strong class="text-emerald-800">${formatVND(curCalc.cumLong)}</strong></span>
+            <div class="flex items-center gap-1">
+              <span class="text-[11px] text-slate-500">Mục tiêu:</span>
+              <input type="text" inputmode="numeric" value="${formatNumberDots(longTarget)}"
+                oninput="formatCurrencyInputLive(this)" onchange="updateGoalCap('longTermGoal', this.value)"
+                class="w-28 px-2 py-1 text-right font-bold border border-slate-300 rounded bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" />
+              <span class="text-[11px] text-slate-500">₫</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">Tháng này rót vào: <strong class="text-emerald-700">+${formatVND(curCalc.addedToLong)}</strong></p>
+        </div>
+      `;
+    }
+
+    function renderMonthTabs(activeIdx) {
+      const container = document.getElementById('monthTabs');
+      container.innerHTML = appData.months.map((m, idx) => `
+        <button onclick="selectMonth(${idx})"
+          class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition ${idx === activeIdx ? 'tab-active' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+          ${m.label}
+        </button>
+      `).join('');
+    }
+
+    function renderKPICards(c) {
+      const savingRatio = c.income > 0 ? ((c.totalMonthDepositAllFunds / c.income) * 100).toFixed(1) : 0;
+      const expenseRatio = c.income > 0 ? ((c.totalOutflow / c.income) * 100).toFixed(1) : 0;
+
+      // Xác định dòng mô tả tháng này tiền đang chảy vào đâu
+      let activeFlowDesc = '';
+      if (c.addedToShort > 0 && c.addedToMid === 0 && c.addedToLong === 0) {
+        activeFlowDesc = `100% chảy vào Quỹ Ngắn Hạn`;
+      } else if (c.addedToShort > 0 && c.addedToMid > 0 && c.addedToLong === 0) {
+        activeFlowDesc = `Lấp đầy Ngắn Hạn & tràn sang Trung Hạn`;
+      } else if (c.addedToShort === 0 && c.addedToMid > 0 && c.addedToLong === 0) {
+        activeFlowDesc = `100% chảy vào Quỹ Trung Hạn`;
+      } else if (c.addedToMid > 0 && c.addedToLong > 0) {
+        activeFlowDesc = `Lấp đầy Trung Hạn & tràn sang Dài Hạn`;
+      } else {
+        activeFlowDesc = `100% chảy vào Quỹ Tích Lũy Dài Hạn`;
+      }
+
+      document.getElementById('kpiCards').innerHTML = `
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <p class="text-xs font-medium text-slate-500">Tổng thu nhập tháng (A)</p>
+          <p class="text-xl font-bold text-slate-900 mt-1">${formatVND(c.income)}</p>
+          <p class="text-[11px] text-emerald-600 mt-1">
+            Lãi 6T đáo hạn: +${formatVND(c.maturedInterest)} ${c.maturedFromBank ? `(từ ${c.maturedFromBank} ${c.maturedFromLabel})` : ''}
+          </p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <p class="text-xs font-medium text-slate-500">Tổng Chi Tiêu (${c.banks.jar2}, ${c.banks.jar3}, ${c.banks.jar4})</p>
+          <p class="text-xl font-bold text-rose-600 mt-1">${formatVND(c.totalOutflow)}</p>
+          <p class="text-[11px] text-slate-500 mt-1">Chiếm <strong>${expenseRatio}%</strong> thu nhập (Thiết yếu: ${formatVND(c.essentialLivingCost)})</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-medium text-slate-500">Tổng Tiền Gửi 6T Tháng Này</p>
+            <span class="bank-badge ${getBankStyleClass(c.addedToShort > 0 && c.jar7Effective === 0 ? c.banks.jar1 : c.banks.jar7)}">
+              ${c.addedToShort > 0 && c.jar7Effective === 0 ? c.banks.jar1 : c.banks.jar7}
+            </span>
+          </div>
+          <p class="text-xl font-bold text-indigo-600 mt-1">${formatVND(c.totalMonthDepositAllFunds)}</p>
+          <p class="text-[11px] text-slate-600 mt-1 font-medium">${activeFlowDesc} (${savingRatio}%)</p>
+        </div>
+
+        <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-sm">
+          <p class="text-xs font-medium text-slate-300">Tổng Tài Sản Tích Lũy (3 Quỹ)</p>
+          <p class="text-xl font-bold text-emerald-400 mt-1">${formatVND(c.totalWealth)}</p>
+          <p class="text-[11px] text-slate-300 mt-1">
+            Ngắn: ${formatVND(c.cumShort)} • Trung: ${formatVND(c.cumMid)} • Dài: ${formatVND(c.cumLong)}
+          </p>
+        </div>
+      `;
+    }
+
+    function renderJarsTable(m, c) {
+      document.getElementById('currentMonthTitle').textContent = `Bảng Phân Bổ Các Hũ — ${m.label}`;
+      document.getElementById('monthIncomeInput').value = formatNumberDots(m.income);
+      document.getElementById('monthRateInput').value = m.rate6M;
+      document.getElementById('monthNoteInput').value = m.note || '';
+
+      const pct = (val) => c.income > 0 ? ((val / c.income) * 100).toFixed(2) + '%' : '0.00%';
+      const banks = m.banks || getDefaultBanks();
+
+      let jar1Note = `Lũy kế Ngắn hạn (${banks.jar1}): <strong>${formatVND(c.cumShort)}</strong> / ${formatVND(appData.config.shortTermCap)}`;
+      if (!c.isShortFull) {
+        jar1Note += `<span class="block text-[11px] text-amber-700 font-semibold">🔥 Đang ưu tiên gom toàn bộ tiền dư vào đây cho xong Quỹ Ngắn Hạn</span>`;
+      } else if (c.addedToShort > 0) {
+        jar1Note += `<span class="block text-[11px] text-emerald-600 font-semibold">✓ Vừa nạp đủ 100% Quỹ Ngắn Hạn trong tháng này!</span>`;
+      } else {
+        jar1Note += `<span class="block text-[11px] text-emerald-600">✓ Đã khóa sổ an toàn (100%)</span>`;
+      }
+
+      let jar7Note = '';
+      if (!c.isShortFull && c.jar7Effective === 0) {
+        jar7Note = `<span class="text-amber-700 font-medium">⏳ Tạm dừng (0 ₫) — Chờ Quỹ Ngắn Hạn đủ ${formatVND(appData.config.shortTermCap)} trước</span>`;
+      } else if (!c.isMidFull && c.addedToLong === 0) {
+        jar7Note = `
+          <div>Lũy kế Trung hạn (${banks.jar7}): <strong class="text-blue-700">${formatVND(c.cumMid)}</strong> / ${formatVND(appData.config.midTermCap)}</div>
+          <span class="text-[11px] text-blue-700 font-semibold">🔥 Đang dồn 100% vào Quỹ Trung Hạn (Tích lũy dài hạn = 0 ₫)</span>
+        `;
+      } else if (c.addedToMid > 0 && c.addedToLong > 0) {
+        jar7Note = `
+          <div>✓ Vừa lấp đầy Quỹ Trung Hạn (+${formatVND(c.addedToMid)}) & tràn sang Dài Hạn (+${formatVND(c.addedToLong)})</div>
+          <div class="text-[11px] text-emerald-700 font-bold">Lũy kế Dài hạn: ${formatVND(c.cumLong)}</div>
+        `;
+      } else {
+        jar7Note = `
+          <div>✓ Quỹ Trung Hạn đã xong (${formatVND(c.cumMid)})</div>
+          <div class="text-emerald-700 font-bold">🔥 Lũy kế Tích Lũy Dài Hạn: ${formatVND(c.cumLong)} / ${formatVND(appData.config.longTermGoal)}</div>
+        `;
+      }
+
+      const rows = [
+        {
+          stt: 1, jarKey: 'jar1', name: 'Quỹ dự phòng Ngắn hạn (1–2T)', bank: banks.jar1,
+          amount: c.jar1Effective,
+          ratio: pct(c.jar1Effective),
+          note: jar1Note
+        },
+        {
+          stt: 2, jarKey: 'jar2', name: 'Chi phí bắt buộc', bank: banks.jar2,
+          amount: c.jar2, ratio: pct(c.jar2),
+          note: 'Tiền nước, internet, phụ cấp mẹ, dịch vụ số'
+        },
+        {
+          stt: 3, jarKey: 'jar3', name: 'Tiền chợ', bank: banks.jar3,
+          amount: c.jar3, ratio: pct(c.jar3),
+          note: 'Chia đôi tiền (1.500.000 ₫) • ~1tr/tuần'
+        },
+        {
+          stt: 4, jarKey: 'jar4', name: 'Đồ sinh hoạt', bank: banks.jar4,
+          amount: c.jar4, ratio: pct(c.jar4),
+          note: 'Cắt tóc, Gym, Điện thoại, Giặt đồ'
+        },
+        {
+          stt: 5, jarKey: 'jar5', name: 'Đầu tư phát triển bản thân', bank: banks.jar5,
+          amount: c.jar5, ratio: pct(c.jar5),
+          note: 'IELTS, Revit ACP, Tiếng Đức, Rhino'
+        },
+        {
+          stt: 6, jarKey: 'jar6', name: 'Giải trí', bank: banks.jar6,
+          amount: c.jar6, ratio: pct(c.jar6),
+          isEditableEntertainment: true,
+          note: 'Chỉ tiêu khi các hũ trên đã ổn'
+        },
+        {
+          stt: 7, jarKey: 'jar7', name: 'Dự phòng Trung hạn $\rightarrow$ Tích lũy Dài hạn (6T)', bank: banks.jar7,
+          amount: c.jar7Effective, ratio: pct(c.jar7Effective),
+          note: jar7Note
+        }
+      ];
+
+      document.getElementById('jarsTableBody').innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-3 font-medium text-slate-800">${r.stt}. ${r.name}</td>
+          <td class="py-3 px-2 text-center">
+            <input type="text" list="bankSuggestions" value="${r.bank}"
+              onchange="updateJarBank('${r.jarKey}', this.value)"
+              title="Nhấp để gõ tên ngân hàng hoặc chọn từ danh sách"
+              class="bank-input ${getBankStyleClass(r.bank)}" />
+          </td>
+          <td class="py-3 px-3 text-right font-bold text-slate-900">
+            ${r.isEditableEntertainment
+              ? `<div class="inline-flex items-center justify-end gap-1">
+                   <input type="text" inputmode="numeric" value="${formatNumberDots(r.amount)}"
+                     oninput="formatCurrencyInputLive(this)" onchange="updateEntertainment(this.value)"
+                     class="w-28 px-2 py-1 text-right border border-slate-300 rounded bg-white font-bold focus:ring-2 focus:ring-emerald-500 outline-none" />
+                   <span class="text-xs text-slate-500">₫</span>
+                 </div>`
+              : formatVND(r.amount)}
+          </td>
+          <td class="py-3 px-2 text-right text-xs font-semibold text-slate-500">${r.ratio}</td>
+          <td class="py-3 px-3 text-right text-xs text-slate-600">${r.note}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('summaryThreePillars').innerHTML = `
+        <div class="text-xs font-bold uppercase text-slate-700 border-b border-slate-200 pb-1">Chi Tiết Rót Vào 3 Quỹ Tháng Này</div>
+        <div class="flex justify-between text-xs">
+          <span class="font-medium text-slate-600">1. Rót vào Quỹ Ngắn Hạn [${banks.jar1}]:</span>
+          <span class="font-bold text-amber-600">+${formatVND(c.addedToShort)}</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="font-medium text-slate-600">2. Rót vào Quỹ Trung Hạn [${banks.jar7}]:</span>
+          <span class="font-bold text-blue-600">+${formatVND(c.addedToMid)}</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="font-medium text-slate-600">3. Rót vào Tích Lũy Dài Hạn [${banks.jar7}]:</span>
+          <span class="font-bold text-emerald-700">+${formatVND(c.addedToLong)}</span>
+        </div>
+      `;
+    }
+
+    function renderBankAllocationSummary(c) {
+      const b = c.banks;
+      const entries = [
+        { bank: b.jar1, jarName: 'Quỹ Ngắn hạn', amount: c.jar1Effective },
+        { bank: b.jar2, jarName: 'Hũ 2 (Bắt buộc)', amount: c.jar2 },
+        { bank: b.jar3, jarName: 'Hũ 3 (Tiền chợ)', amount: c.jar3 },
+        { bank: b.jar4, jarName: 'Hũ 4 (Sinh hoạt)', amount: c.jar4 },
+        { bank: b.jar5, jarName: 'Hũ 5 (Đầu tư)', amount: c.jar5 },
+        { bank: b.jar6, jarName: 'Hũ 6 (Giải trí)', amount: c.jar6 },
+        { bank: b.jar7, jarName: 'Quỹ Trung/Dài hạn', amount: c.jar7Effective }
+      ];
+      if (c.unexpected > 0) {
+        entries.push({ bank: b.unexpected || b.jar1, jarName: 'Phát sinh', amount: c.unexpected });
+      }
+
+      const grouped = {};
+      entries.forEach(item => {
+        if (item.amount <= 0) return;
+        const key = String(item.bank || 'KHÁC').trim().toUpperCase();
+        if (!grouped[key]) grouped[key] = { total: 0, jars: [] };
+        grouped[key].total += item.amount;
+        grouped[key].jars.push(item.jarName);
+      });
+
+      const html = Object.keys(grouped).map(bankCode => {
+        const g = grouped[bankCode];
+        return `
+          <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/60 last:border-none">
+            <div class="flex items-center gap-2">
+              <span class="bank-badge ${getBankStyleClass(bankCode)}">${bankCode}</span>
+              <span class="text-[11px] text-slate-500 truncate max-w-[175px]" title="${g.jars.join(', ')}">${g.jars.join(' + ')}</span>
+            </div>
+            <span class="font-bold text-slate-800">${formatVND(g.total)}</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('bankAllocationSummary').innerHTML = html || '<p class="text-xs text-slate-400">Chưa có phân bổ</p>';
+    }
+
+    function renderBarChart(c) {
+      const ctx = document.getElementById('jarBarChart').getContext('2d');
+      const b = c.banks;
+      const labels = [
+        `1. Quỹ Ngắn hạn [${b.jar1}]`,
+        `2. Quỹ Trung hạn [${b.jar7}]`,
+        `3. Quỹ Dài hạn [${b.jar7}]`,
+        `CP Bắt buộc [${b.jar2}]`,
+        `Tiền chợ [${b.jar3}]`,
+        `Đồ sinh hoạt [${b.jar4}]`,
+        `Giải trí [${b.jar6}]`
+      ];
+      const dataVals = [
+        c.addedToShort,
+        c.addedToMid,
+        c.addedToLong,
+        c.jar2, c.jar3, c.jar4, c.jar6
+      ];
+
+      if (barChartInstance) barChartInstance.destroy();
+      barChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Số tiền tháng này (VND)',
+            data: dataVals,
+            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#fdba74', '#fde047', '#93c5fd', '#cbd5e1'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { callback: (v) => (v / 1000000) + 'tr' } }
+          }
+        }
+      });
+    }
+
+    function renderDetailedBuckets(m) {
+      const banks = m.banks || getDefaultBanks();
+      const buckets = [
+        { key: 'mandatory', jarKey: 'jar2', title: 'Hũ Chi Phí Bắt Buộc', bank: banks.jar2, items: m.mandatory },
+        { key: 'food', jarKey: 'jar3', title: 'Hũ Tiền Chợ & Ăn Uống', bank: banks.jar3, items: m.food },
+        { key: 'living', jarKey: 'jar4', title: 'Hũ Đồ Sinh Hoạt Cá Nhân', bank: banks.jar4, items: m.living },
+        { key: 'invest', jarKey: 'jar5', title: 'Hũ Đầu Tư Bản Thân (Học Tập)', bank: banks.jar5, items: m.invest },
+        { key: 'unexpected', jarKey: 'unexpected', title: 'Hũ Chi Phí Phát Sinh Ngoài Dự Kiến', bank: banks.unexpected || banks.jar1, items: m.unexpected }
+      ];
+
+      document.getElementById('detailedBucketsContainer').innerHTML = buckets.map(b => {
+        const total = sumItems(b.items);
+        const rowsHtml = (b.items || []).map((item, i) => `
+          <div class="flex items-center gap-1.5 py-1.5 border-b border-slate-100 last:border-none">
+            <input type="text" value="${item.name}" onchange="updateSubItem('${b.key}', ${i}, 'name', this.value)"
+              class="flex-1 text-xs px-2 py-1 border border-transparent hover:border-slate-300 focus:border-slate-400 rounded bg-transparent outline-none" />
+            <div class="relative flex items-center">
+              <input type="text" inputmode="numeric" value="${formatNumberDots(item.amount)}"
+                oninput="formatCurrencyInputLive(this)" onchange="updateSubItem('${b.key}', ${i}, 'amount', this.value)"
+                class="w-28 text-xs font-semibold text-right pr-5 pl-2 py-1 border border-slate-200 rounded bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+              <span class="absolute right-1.5 text-[10px] text-slate-400 pointer-events-none">₫</span>
+            </div>
+            <button onclick="removeSubItem('${b.key}', ${i})" class="text-slate-400 hover:text-rose-600 text-xs px-1">✕</button>
+          </div>
+        `).join('');
+
+        return `
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2">
+                <div class="flex items-center gap-2">
+                  <input type="text" list="bankSuggestions" value="${b.bank}"
+                    onchange="updateJarBank('${b.jarKey}', this.value)"
+                    title="Đổi ngân hàng tại đây sẽ đồng bộ ngay với Bảng 7 Hũ"
+                    class="bank-input ${getBankStyleClass(b.bank)}" />
+                  <h4 class="font-bold text-sm text-slate-800">${b.title}</h4>
+                </div>
+                <span class="font-bold text-sm text-slate-900">${formatVND(total)}</span>
+              </div>
+              <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1">
+                ${rowsHtml || '<p class="text-xs text-slate-400 italic py-2">Chưa có khoản chi nào</p>'}
+              </div>
+            </div>
+            <button onclick="addSubItem('${b.key}')"
+              class="mt-3 w-full py-1.5 rounded-lg border border-dashed border-slate-300 hover:border-emerald-500 text-xs font-medium text-slate-600 hover:text-emerald-700 transition">
+              + Thêm hạng mục (${b.bank})
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLadderTable(timeline) {
+      let milestoneShort = null;
+      let milestoneMid = null;
+      let milestoneLong = null;
+      const longGoal = Math.max(0, Number(appData.config.longTermGoal) || 300000000);
+
+      const html = timeline.map((r, i) => {
+        if (!milestoneShort && r.isShortFull) milestoneShort = r.label.split(' ')[0];
+        if (!milestoneMid && r.isMidFull) milestoneMid = r.label.split(' ')[0];
+        if (!milestoneLong && r.cumLong >= longGoal) milestoneLong = r.label;
+
+        const isCurrent = i === appData.currentMonthIndex;
+        return `
+          <tr onclick="selectMonth(${i})" class="cursor-pointer transition ${isCurrent ? 'bg-emerald-50 font-semibold' : 'hover:bg-slate-50'}">
+            <td class="py-2.5 px-3">${r.label}</td>
+            <td class="py-2.5 px-2 text-center">
+              <span class="bank-badge ${getBankStyleClass(r.banks.jar7)}">${r.banks.jar7}</span>
+            </td>
+            <td class="py-2.5 px-2 text-right">${formatVND(r.income)}</td>
+            <td class="py-2.5 px-2 text-right text-rose-600">${formatVND(r.totalOutflow)}</td>
+            <td class="py-2.5 px-2 text-right text-indigo-600">
+              +${formatVND(r.maturedInterest)}
+              ${r.maturedFromBank ? `<span class="text-[10px] text-slate-400 block">từ ${r.maturedFromBank} (${r.maturedFromLabel})</span>` : ''}
+            </td>
+            <td class="py-2.5 px-3 text-right font-medium ${r.addedToShort > 0 ? 'text-amber-700 bg-amber-50/50' : 'text-slate-600'}">
+              ${formatVND(r.cumShort)}
+              ${r.addedToShort > 0 ? `<span class="block text-[10px] text-amber-600">(+${formatVND(r.addedToShort)})</span>` : ''}
+            </td>
+            <td class="py-2.5 px-3 text-right font-medium ${r.addedToMid > 0 ? 'text-blue-700 bg-blue-50/50' : 'text-slate-600'}">
+              ${formatVND(r.cumMid)}
+              ${r.addedToMid > 0 ? `<span class="block text-[10px] text-blue-600">(+${formatVND(r.addedToMid)})</span>` : ''}
+            </td>
+            <td class="py-2.5 px-3 text-right font-semibold ${r.addedToLong > 0 ? 'text-emerald-700 bg-emerald-50/40' : 'text-slate-400'}">
+              ${formatVND(r.cumLong)}
+              ${r.addedToLong > 0 ? `<span class="block text-[10px] text-emerald-600">(+${formatVND(r.addedToLong)})</span>` : ''}
+            </td>
+            <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatVND(r.totalWealth)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('ladderTableBody').innerHTML = html;
+      const badge = document.getElementById('milestone300Badge');
+      if (milestoneLong) {
+        badge.textContent = `✓ Xong Ngắn hạn: ${milestoneShort || '-'} • Xong Trung hạn: ${milestoneMid || '-'} • Đạt ${formatVND(longGoal)} Dài hạn: ${milestoneLong}`;
+      } else {
+        badge.textContent = `✓ Xong Ngắn hạn: ${milestoneShort || 'Chưa'} • Xong Trung hạn: ${milestoneMid || 'Chưa'} • Bấm "+ Thêm tháng tiếp theo" để xem tháng đạt ${formatVND(longGoal)} Dài hạn`;
+      }
+    }
+
+    function updateGoalCap(fieldKey, rawVal) {
+      appData.config[fieldKey] = parseFormattedNumber(rawVal);
+      renderAll();
+    }
+
+    function updateJarBank(jarKey, newBankValue) {
+      const m = appData.months[appData.currentMonthIndex];
+      if (!m.banks) m.banks = getDefaultBanks();
+      const cleaned = String(newBankValue || '').trim().toUpperCase() || 'TECH';
+      m.banks[jarKey] = cleaned;
+      renderAll();
+    }
+
+    function copyBanksToAllFutureMonths() {
+      const curIdx = appData.currentMonthIndex;
+      const curBanks = appData.months[curIdx].banks || getDefaultBanks();
+      for (let i = curIdx + 1; i < appData.months.length; i++) {
+        appData.months[i].banks = JSON.parse(JSON.stringify(curBanks));
+      }
+      renderAll();
+      alert(`Đã đồng bộ cấu hình Ngân hàng của ${appData.months[curIdx].label} sang tất cả các tháng tiếp theo!`);
+    }
+
+    function selectMonth(idx) {
+      appData.currentMonthIndex = idx;
+      renderAll();
+    }
+
+    function updateMonthHeader() {
+      const m = appData.months[appData.currentMonthIndex];
+      m.income = parseFormattedNumber(document.getElementById('monthIncomeInput').value);
+      m.rate6M = Number(document.getElementById('monthRateInput').value) || 0;
+      m.note = document.getElementById('monthNoteInput').value;
+      renderAll();
+    }
+
+    function updateEntertainment(val) {
+      const m = appData.months[appData.currentMonthIndex];
+      m.entertainment = parseFormattedNumber(val);
+      renderAll();
+    }
+
+    function updateSubItem(bucketKey, itemIdx, field, val) {
+      const m = appData.months[appData.currentMonthIndex];
+      if (field === 'amount') {
+        m[bucketKey][itemIdx].amount = parseFormattedNumber(val);
+      } else {
+        m[bucketKey][itemIdx].name = val;
+      }
+      renderAll();
+    }
+
+    function addSubItem(bucketKey) {
+      const m = appData.months[appData.currentMonthIndex];
+      if (!m[bucketKey]) m[bucketKey] = [];
+      m[bucketKey].push({ name: 'Khoản mục mới', amount: 0 });
+      renderAll();
+    }
+
+    function removeSubItem(bucketKey, itemIdx) {
+      const m = appData.months[appData.currentMonthIndex];
+      m[bucketKey].splice(itemIdx, 1);
+      renderAll();
+    }
+
+    function addNewMonth() {
+      const last = appData.months[appData.months.length - 1];
+      const [yearStr, monthStr] = (last.id || '2027-11').split('-');
+      let year = parseInt(yearStr, 10);
+      let month = parseInt(monthStr, 10) + 1;
+      if (month > 12) { month = 1; year += 1; }
+      const newId = `${year}-${String(month).padStart(2, '0')}`;
+      const newLabel = `T${String(month).padStart(2, '0')}/${year} (Tr.${appData.months.length + 1})`;
+
+      appData.months.push({
+        id: newId,
+        label: newLabel,
+        income: 24700000,
+        rate6M: last.rate6M || 3.5,
+        entertainment: last.entertainment || 500000,
+        note: 'Tự động kế thừa cấu hình NH & chi tiêu từ tháng trước',
+        banks: JSON.parse(JSON.stringify(last.banks || getDefaultBanks())),
+        mandatory: JSON.parse(JSON.stringify(last.mandatory)),
+        food: JSON.parse(JSON.stringify(last.food)),
+        living: JSON.parse(JSON.stringify(last.living)),
+        invest: JSON.parse(JSON.stringify(last.invest)),
+        unexpected: []
+      });
+      appData.currentMonthIndex = appData.months.length - 1;
+      renderAll();
+    }
+
+    function deleteCurrentMonth() {
+      if (appData.months.length <= 1) return alert('Cần giữ lại ít nhất 1 tháng dữ liệu!');
+      if (!confirm('Bạn có chắc muốn xóa tháng hiện tại không?')) return;
+      appData.months.splice(appData.currentMonthIndex, 1);
+      appData.currentMonthIndex = Math.max(0, appData.currentMonthIndex - 1);
+      renderAll();
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `quan-ly-tai-chinh-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && Array.isArray(parsed.months)) {
+            appData = ensureStructure(parsed);
+            renderAll();
+            alert('Đã nhập dữ liệu thành công!');
+          }
+        } catch (err) {
+          alert('File JSON không hợp lệ!');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportCSV() {
+      const timeline = computeTimeline();
+      const headers = ['Thang', 'NH Du Phong', 'NH Tiet Kiem 6T', 'Thu nhap', 'Chi tieu', 'Lai 6T dao han', 'Luy ke Ngan Han', 'Luy ke Trung Han', 'Luy ke Dai Han', 'Tong Tai San'];
+      const rows = timeline.map(r => [
+        `"${r.label}"`, `"${r.banks.jar1}"`, `"${r.banks.jar7}"`, r.income, r.totalOutflow, r.maturedInterest, r.cumShort, r.cumMid, r.cumLong, r.totalWealth
+      ]);
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bao-cao-tai-chinh-3-tang.csv';
+      a.click();
+    }
+
+    function resetToDefault() {
+      if (!confirm('Khôi phục lại toàn bộ dữ liệu gốc từ 13 trang PDF của bạn?')) return;
+      appData = getDefaultData();
+      renderAll();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
